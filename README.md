@@ -2,9 +2,9 @@
 
 Spark performance tuning framework focused on reproducible benchmark scenarios.
 
-## Scope
+## Contexto do estudo
 
-Reproducible benchmark comparing:
+Neste projeto eu comparei dois caminhos de execução no Spark:
 
 - **Baseline processing** (simple joins and default execution behavior)
 - **Optimized processing** using:
@@ -70,7 +70,7 @@ Estimated gain: **98.61%**.
 - `OPTIMIZE ... ZORDER` depends on Delta-compatible runtime support.
 - Benchmark should be interpreted by trend and relative gain, not absolute time only.
 
-## Run Notes (Local Study)
+## Notas de execução (ambiente local)
 
 - Study date: `2026-03-09` (Windows local environment)
 - Local logs: `reports/run_2026-03-09_17-50-37.log` and `reports/run_2026-03-09_17-50-54.log`
@@ -80,7 +80,7 @@ Main local blocker: Spark startup failed on Windows due to missing `HADOOP_HOME/
 
 ## Lessons Learned
 
-- Spark local setup has dependency order: Python packages alone are not enough; Java and Hadoop runtime compatibility matter.
-- Fixing `JAVA_HOME` solved the first error (`JAVA_GATEWAY_EXITED`), but Windows still required `HADOOP_HOME/winutils`.
-- `OPTIMIZE ... ZORDER` is runtime-dependent; outside Databricks-compatible environments, fallback behavior should be expected.
-- Benchmark analysis should prioritize trend and relative gain, since absolute runtime changes by machine and runtime configuration.
+- Só instalar pacote Python não resolve tudo no Spark local; Java e camada Hadoop precisam estar alinhados.
+- Ajustar `JAVA_HOME` resolveu o primeiro erro (`JAVA_GATEWAY_EXITED`), mas ainda ficou pendente o `winutils` no Windows.
+- `OPTIMIZE ... ZORDER` depende de runtime compatível; fora desse cenário, o esperado é tratar fallback.
+- Para benchmark, o que vale aqui é tendência e ganho relativo, não tempo absoluto isolado.
