@@ -1,8 +1,8 @@
 # Efficiency Project: Spark Performance Tuning Framework
 
-Performance tuning framework to demonstrate how a long Spark workload can be reduced from hours to minutes using the right execution strategy.
+Spark performance tuning framework focused on reproducible benchmark scenarios.
 
-## What this project proves
+## Scope
 
 Reproducible benchmark comparing:
 
@@ -11,8 +11,6 @@ Reproducible benchmark comparing:
   - partitioning strategy
   - Delta Lake `OPTIMIZE` with `ZORDER`
   - broadcast joins for small dimension tables
-
-Core mindset: optimize for runtime and cost without compromising data reliability.
 
 ## Project Structure
 
@@ -65,12 +63,6 @@ This execution writes results to:
 | Tuned Framework | 20min |
 
 Estimated gain: **98.61%**.
-
-## Why this project is portfolio-relevant
-
-- Gives concrete evidence for performance tuning discussions in interviews
-- Combines engineering tactics (partitioning/broadcast/Z-Order) with measurable impact
-- Communicates technical decisions in a way that business stakeholders can understand
 
 ## Operational Constraints
 
