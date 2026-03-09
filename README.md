@@ -70,12 +70,17 @@ Estimated gain: **98.61%**.
 - `OPTIMIZE ... ZORDER` depends on Delta-compatible runtime support.
 - Benchmark should be interpreted by trend and relative gain, not absolute time only.
 
-## Execution Evidence (Local Run)
+## Run Notes (Local Study)
 
-- Run date: `2026-03-09` (Windows local environment)
-- Transcript attempt 1 (missing Java): `reports/run_2026-03-09_17-50-37.log`
-- Transcript attempt 2 (Java configured): `reports/run_2026-03-09_17-50-54.log`
+- Study date: `2026-03-09` (Windows local environment)
+- Local logs: `reports/run_2026-03-09_17-50-37.log` and `reports/run_2026-03-09_17-50-54.log`
 - Environment snapshot: `reports/pip_freeze_2026-03-09_17-50-37.txt`
 
-Observed blocker in this machine: Spark startup fails on Windows due to missing `HADOOP_HOME/winutils`.
-The logs were intentionally kept to provide transparent execution evidence and environment diagnostics.
+Main local blocker: Spark startup failed on Windows due to missing `HADOOP_HOME/winutils`.
+
+## Lessons Learned
+
+- Spark local setup has dependency order: Python packages alone are not enough; Java and Hadoop runtime compatibility matter.
+- Fixing `JAVA_HOME` solved the first error (`JAVA_GATEWAY_EXITED`), but Windows still required `HADOOP_HOME/winutils`.
+- `OPTIMIZE ... ZORDER` is runtime-dependent; outside Databricks-compatible environments, fallback behavior should be expected.
+- Benchmark analysis should prioritize trend and relative gain, since absolute runtime changes by machine and runtime configuration.
