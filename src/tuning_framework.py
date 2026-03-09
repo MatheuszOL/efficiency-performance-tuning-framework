@@ -10,7 +10,7 @@ from pyspark.sql.functions import broadcast, col, count, rand
 
 
 def create_spark(app_name: str = "EfficiencyPerformanceTuning") -> SparkSession:
-    # Keep shuffle partitions explicit for reproducible benchmark behavior.
+    # Mantém partições de shuffle explícitas para comportamento reprodutível no benchmark.
     builder = (
         SparkSession.builder.appName(app_name)
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
@@ -21,7 +21,7 @@ def create_spark(app_name: str = "EfficiencyPerformanceTuning") -> SparkSession:
 
 
 def generate_synthetic_data(spark: SparkSession, rows: int):
-    # High-volume synthetic model to emulate production transaction workloads.
+    # Modelo sintético de alto volume para emular cargas transacionais de produção.
     transactions = (
         spark.range(rows)
         .withColumnRenamed("id", "transaction_id")
@@ -46,7 +46,7 @@ def generate_synthetic_data(spark: SparkSession, rows: int):
 
 
 def baseline_job(transactions, customers, regions):
-    # Baseline path: no partition planning, no broadcast hints.
+    # Caminho baseline: sem planejamento de partição e sem hints de broadcast.
     joined = (
         transactions.join(customers, on="customer_id", how="inner")
         .join(regions, on="region_id", how="inner")
@@ -68,8 +68,8 @@ def optimized_job(spark: SparkSession, transactions, customers, regions, output_
 
     optimized_transactions = spark.read.format("delta").load(partitioned_path)
 
-    # OPTIMIZE + ZORDER is available in Databricks/compatible runtimes.
-    # If unavailable locally, benchmark still runs with partitioning + broadcast.
+    # OPTIMIZE + ZORDER está disponível em runtimes compatíveis com Databricks.
+    # Se não estiver disponível localmente, o benchmark segue com particionamento + broadcast.
     try:
         spark.sql(f"OPTIMIZE delta.`{partitioned_path}` ZORDER BY (customer_id)")
     except Exception as exc:
