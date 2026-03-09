@@ -1,16 +1,31 @@
-# Lessons Learned
+# Trial and Error Notes
 
-## Local Run Notes
+Run date: `2026-03-09` on Windows.
 
-- Study date: `2026-03-09` (Windows local environment)
-- Local logs: `reports/run_2026-03-09_17-50-37.log` and `reports/run_2026-03-09_17-50-54.log`
-- Environment snapshot: `reports/pip_freeze_2026-03-09_17-50-37.txt`
+First test I ran:
+`python src/tuning_framework.py --rows 500000 --report-path reports/benchmark_results_2026-03-09_17-50-37.csv`
 
-Main local blocker: Spark startup failed on Windows due to missing `HADOOP_HOME/winutils`.
+What happened:
+- Spark did not start.
+- Error raised: `JAVA_GATEWAY_EXITED`.
+- Log: `reports/run_2026-03-09_17-50-37.log`
 
-## Lessons
+What I changed:
+- Set `JAVA_HOME` to local JDK 17 and retried.
 
-- Installing Python packages alone is not enough for local Spark; Java and Hadoop layers must be aligned.
-- Setting `JAVA_HOME` solved the first error (`JAVA_GATEWAY_EXITED`), but `winutils` was still missing on Windows.
-- `OPTIMIZE ... ZORDER` depends on runtime support; outside compatible environments, fallback behavior is expected.
-- For benchmarking, trend and relative gain matter more than isolated absolute runtime.
+Second test I ran:
+same command, with Java configured.
+
+What happened:
+- `JAVA_GATEWAY_EXITED` disappeared.
+- New blocker appeared: `HADOOP_HOME and hadoop.home.dir are unset` / missing `winutils`.
+- Log: `reports/run_2026-03-09_17-50-54.log`
+
+What this taught me in practice:
+- In local Spark, fixing Python dependencies is only one piece; Java + Hadoop runtime is the real startup gate.
+- Errors often come in layers: solving one environment issue usually reveals the next one.
+- Benchmark code can be fine while environment blocks execution.
+- For this kind of project, the useful signal is still in repeatable setup and relative performance trend, not one absolute runtime number.
+
+Environment snapshot used in the run:
+`reports/pip_freeze_2026-03-09_17-50-37.txt`
