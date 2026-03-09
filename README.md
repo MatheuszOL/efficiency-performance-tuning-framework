@@ -77,3 +77,13 @@ Estimated gain: **98.61%**.
 - Runtime can vary by cluster size, file compaction state, and concurrent jobs.
 - `OPTIMIZE ... ZORDER` depends on Delta-compatible runtime support.
 - Benchmark should be interpreted by trend and relative gain, not absolute time only.
+
+## Execution Evidence (Local Run)
+
+- Run date: `2026-03-09` (Windows local environment)
+- Transcript attempt 1 (missing Java): `reports/run_2026-03-09_17-50-37.log`
+- Transcript attempt 2 (Java configured): `reports/run_2026-03-09_17-50-54.log`
+- Environment snapshot: `reports/pip_freeze_2026-03-09_17-50-37.txt`
+
+Observed blocker in this machine: Spark startup fails on Windows due to missing `HADOOP_HOME/winutils`.
+The logs were intentionally kept to provide transparent execution evidence and environment diagnostics.
