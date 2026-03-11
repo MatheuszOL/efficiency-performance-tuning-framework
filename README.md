@@ -1,16 +1,18 @@
 # Efficiency Project: Spark Performance Tuning Framework
 
-Spark performance tuning framework focused on reproducible benchmark scenarios.
+Practical Spark benchmark focused on testing performance decisions with measurable evidence.
 
-## Study Context
+## Hypothesis-Driven Context
 
-In this project, I compared two Spark execution paths:
+Main hypothesis tested in this project:
 
-- **Baseline processing** (simple joins and default execution behavior)
-- **Optimized processing** using:
-  - partitioning strategy
-  - Delta Lake `OPTIMIZE` with `ZORDER`
-  - broadcast joins for small dimension tables
+> **Hypothesis**: applying `ZORDER BY (customer_id)` should improve customer-level filtering queries after data is written in Delta format.
+
+I also compare:
+
+- baseline joins (no partition strategy / no broadcast)
+- optimized path (partitioned write + broadcast joins)
+- an intentional "bad" attempt (aggressive repartition) to document a real trade-off
 
 ## Project Structure
 
@@ -39,35 +41,58 @@ pip install -r requirements.txt
 python src/tuning_framework.py --rows 5000000
 ```
 
-This execution writes results to:
+Main outputs:
 
 - `reports/benchmark_results.csv`
-- `reports/performance_notes.md`
+- `reports/explain_baseline_groupby.txt`
+- `reports/explain_optimized_groupby.txt`
+- `reports/explain_customer_filter_before_zorder.txt`
+- `reports/explain_customer_filter_after_zorder.txt`
+
+Optional arguments:
+
+```bash
+python src/tuning_framework.py --rows 5000000 --probe-customer-id 42 --reports-dir reports
+```
+
+## What Is Being Measured
+
+The benchmark exports practical metrics, such as:
+
+- baseline vs optimized runtime
+- customer filter runtime before/after `ZORDER`
+- exchange node count (proxy for shuffle pressure)
+- Delta data file count and data size
+- result of the high-partition attempt vs baseline
+
+## Realistic Data Imperfections Included
+
+To avoid a tutorial-style perfect dataset, the synthetic data intentionally includes:
+
+- skewed `region_id` distribution (`region_id=1` concentrated)
+- random nulls in `status`
+- out-of-order timestamps and some late-like timestamp behavior
 
 ## Optimization Techniques Demonstrated
 
-1. **Partitioning**
-   - Writes transaction data partitioned by `region_id` to reduce scanned data.
+1. **Partitioning by `region_id`**
+   - Reduces broad scans for regional workloads and gives predictable write layout.
 
 2. **Z-Order (Delta Lake)**
-   - Applies `OPTIMIZE ... ZORDER BY (customer_id)` to improve file skipping and locality.
+   - Tested specifically for customer-filter query behavior.
+   - Automatically skipped if the runtime does not support `OPTIMIZE`.
 
 3. **Broadcast Joins**
-   - Broadcasts dimension tables (`customers`, `regions`) to avoid costly shuffle joins.
+   - Broadcasts small dimensions (`customers`, `regions`) to reduce join shuffle.
 
-## Example Theoretical Comparison
-
-| Approach | Execution Time |
-|---|---:|
-| Baseline | 24h |
-| Tuned Framework | 20min |
-
-Estimated gain: **98.61%**.
+4. **Failed attempt documented**
+   - Aggressive repartition (`600`) is kept as an explicit experiment because it often increases shuffle overhead.
 
 ## Operational Constraints
 
 - Runtime can vary by cluster size, file compaction state, and concurrent jobs.
 - `OPTIMIZE ... ZORDER` depends on Delta-compatible runtime support.
-- Benchmark should be interpreted by trend and relative gain, not absolute time only.
+- On Windows local runs, Spark may require `HADOOP_HOME`/`winutils.exe` to initialize correctly.
+- Benchmark is interpreted by trend and relative gain, not absolute wall-clock only.
 
 Study notes and lessons are documented in `LESSONS_LEARNED.md`.
