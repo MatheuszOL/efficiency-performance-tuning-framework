@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import time
 from pathlib import Path
 
@@ -21,12 +22,26 @@ from pyspark.sql.functions import (
 
 
 def create_spark(app_name: str = "EfficiencyPerformanceTuning") -> SparkSession:
+    if os.name == "nt":
+        hadoop_home = os.environ.get("HADOOP_HOME", r"C:\hadoop")
+        hadoop_bin = Path(hadoop_home) / "bin"
+        if (hadoop_bin / "winutils.exe").exists() and (hadoop_bin / "hadoop.dll").exists():
+            os.environ["HADOOP_HOME"] = hadoop_home
+            os.environ["hadoop.home.dir"] = hadoop_home
+            java_opt = f"-Djava.library.path={hadoop_bin}"
+            current_java_opts = os.environ.get("JAVA_TOOL_OPTIONS", "")
+            if java_opt not in current_java_opts:
+                os.environ["JAVA_TOOL_OPTIONS"] = f"{current_java_opts} {java_opt}".strip()
+
     # I keep shuffle partitions explicit so I can compare runs with fewer moving parts.
     builder = (
         SparkSession.builder.appName(app_name)
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+        .config("spark.delta.logStore.class", "org.apache.spark.sql.delta.storage.LocalLogStore")
         .config("spark.sql.shuffle.partitions", "200")
+        .config("spark.hadoop.fs.file.impl", "org.apache.hadoop.fs.RawLocalFileSystem")
+        .config("spark.hadoop.fs.file.impl.disable.cache", "true")
     )
     return configure_spark_with_delta_pip(builder).getOrCreate()
 
