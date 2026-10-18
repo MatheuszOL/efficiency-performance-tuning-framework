@@ -65,6 +65,15 @@ The benchmark exports practical metrics, such as:
 - Delta data file count and data size
 - result of the high-partition attempt vs baseline
 
+Each query timer starts immediately before collecting the complete aggregate
+result and stops when collection finishes. This avoids relying on `count()`,
+which can allow Spark to prune aggregate output expressions. The timer includes
+the query's input scan and execution, but excludes DataFrame construction,
+optimized-path data writing, and report generation. The baseline and optimized
+paths still use different storage layouts and join strategies, so their timings
+describe these end-to-end query paths and should not be interpreted as an
+isolated measurement of any single optimization.
+
 ## Realistic Data Imperfections Included
 
 To avoid a tutorial-style perfect dataset, the synthetic data intentionally includes:
