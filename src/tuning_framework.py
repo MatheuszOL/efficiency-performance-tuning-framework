@@ -20,6 +20,8 @@ from pyspark.sql.functions import (
     when,
 )
 
+from benchmark_contracts import time_result_collection
+
 
 def create_spark(app_name: str = "EfficiencyPerformanceTuning") -> SparkSession:
     if os.name == "nt":
@@ -111,9 +113,7 @@ def baseline_job(transactions, customers, regions, explain_path: Path) -> tuple[
     result = joined.groupBy("region_name", "customer_segment").agg(count("*").alias("total_transactions"))
     _write_explain(result, explain_path)
 
-    start = time.perf_counter()
-    result.count()
-    elapsed = time.perf_counter() - start
+    elapsed, _ = time_result_collection(result)
     exchanges = _count_exchange_nodes(result)
     return elapsed, exchanges
 
@@ -127,9 +127,7 @@ def high_partition_attempt_job(transactions, customers, regions) -> float:
     )
     result = joined.groupBy("region_name", "customer_segment").agg(count("*").alias("total_transactions"))
 
-    start = time.perf_counter()
-    result.count()
-    elapsed = time.perf_counter() - start
+    elapsed, _ = time_result_collection(result)
     return elapsed
 
 
@@ -150,9 +148,7 @@ def run_customer_filter_experiment(
     )
     _write_explain(pre_query, explain_before)
 
-    start = time.perf_counter()
-    pre_query.count()
-    pre_elapsed = time.perf_counter() - start
+    pre_elapsed, _ = time_result_collection(pre_query)
     metrics["customer_filter_before_seconds"] = pre_elapsed
 
     zorder_ok, zorder_msg = _safe_optimize_with_zorder(spark, partitioned_path)
@@ -166,9 +162,7 @@ def run_customer_filter_experiment(
     )
     _write_explain(post_query, explain_after)
 
-    start = time.perf_counter()
-    post_query.count()
-    post_elapsed = time.perf_counter() - start
+    post_elapsed, _ = time_result_collection(post_query)
     metrics["customer_filter_after_seconds"] = post_elapsed
     metrics["customer_filter_exchange_nodes_before"] = float(_count_exchange_nodes(pre_query))
     metrics["customer_filter_exchange_nodes_after"] = float(_count_exchange_nodes(post_query))
@@ -209,9 +203,7 @@ def optimized_job(
     result = joined.groupBy("region_name", "customer_segment").agg(count("*").alias("total_transactions"))
     _write_explain(result, explain_path)
 
-    start = time.perf_counter()
-    result.count()
-    elapsed = time.perf_counter() - start
+    elapsed, _ = time_result_collection(result)
     exchanges = _count_exchange_nodes(result)
 
     filter_metrics = run_customer_filter_experiment(
